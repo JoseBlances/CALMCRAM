@@ -1,0 +1,228 @@
+/* ============================================
+   CramCalm — Academic State Visual Overrides
+   ============================================
+   States: stable (default), pressure, crisis, burnout
+   Applied via data-mood attribute on <html>
+   ============================================ */
+
+/* --- STABLE MODE (default — see app.css) --- */
+[data-mood="stable"] {
+    --cc-bg: #F0F7F4;
+    --cc-surface: #CCE3DE;
+    --cc-surface-hover: #b8d6cc;
+    --cc-primary: #6B9080;
+    --cc-primary-hover: #5a7d6d;
+    --cc-accent: #A4C3B2;
+    --cc-text: #2D3436;
+    --cc-muted: #636E72;
+    --cc-border: rgba(107, 144, 128, 0.15);
+    --cc-card-bg: rgba(255, 255, 255, 0.85);
+    --cc-glass: rgba(255, 255, 255, 0.6);
+    --cc-glass-border: rgba(255, 255, 255, 0.3);
+    --cc-shadow-glow: 0 0 20px rgba(107, 144, 128, 0.3);
+}
+
+[data-mood="stable"].dark {
+    --cc-bg: #1A2332;
+    --cc-surface: #243447;
+    --cc-surface-hover: #2c3e54;
+    --cc-primary: #7EC8A8;
+    --cc-primary-hover: #6ab894;
+    --cc-accent: #5A9A7D;
+    --cc-text: #E8F0EC;
+    --cc-muted: #8AA89A;
+    --cc-border: rgba(126, 200, 168, 0.15);
+    --cc-card-bg: rgba(36, 52, 71, 0.85);
+    --cc-glass: rgba(26, 35, 50, 0.7);
+    --cc-glass-border: rgba(126, 200, 168, 0.1);
+}
+
+/* --- PRESSURE MODE --- */
+[data-mood="pressure"] {
+    --cc-bg: #FFF8F0;
+    --cc-surface: #FFE8D6;
+    --cc-surface-hover: #ffd9bf;
+    --cc-primary: #CB997E;
+    --cc-primary-hover: #b8866b;
+    --cc-accent: #DDBEA9;
+    --cc-text: #3D3024;
+    --cc-muted: #7A6B5D;
+    --cc-border: rgba(203, 153, 126, 0.2);
+    --cc-card-bg: rgba(255, 255, 255, 0.9);
+    --cc-glass: rgba(255, 248, 240, 0.7);
+    --cc-glass-border: rgba(203, 153, 126, 0.15);
+    --cc-shadow-glow: 0 0 20px rgba(203, 153, 126, 0.3);
+}
+
+[data-mood="pressure"].dark {
+    --cc-bg: #2A1F1A;
+    --cc-surface: #3A2E24;
+    --cc-surface-hover: #4a3e34;
+    --cc-primary: #E8B896;
+    --cc-primary-hover: #d4a47e;
+    --cc-accent: #CB997E;
+    --cc-text: #F5EDE6;
+    --cc-muted: #B8A090;
+    --cc-border: rgba(232, 184, 150, 0.15);
+    --cc-card-bg: rgba(58, 46, 36, 0.85);
+    --cc-glass: rgba(42, 31, 26, 0.7);
+    --cc-glass-border: rgba(232, 184, 150, 0.1);
+}
+
+/* Pressure mode atmosphere */
+[data-mood="pressure"] #atmosphere {
+    background: radial-gradient(ellipse at 30% 0%, rgba(251, 191, 36, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(203, 153, 126, 0.06) 0%, transparent 50%);
+}
+
+[data-mood="pressure"].dark #atmosphere {
+    background: radial-gradient(ellipse at 30% 0%, rgba(251, 191, 36, 0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(203, 153, 126, 0.04) 0%, transparent 50%);
+}
+
+/* --- CRISIS MODE --- */
+[data-mood="crisis"] {
+    --cc-bg: #F0E6F6;
+    --cc-surface: #E2D1F0;
+    --cc-surface-hover: #d5c0e5;
+    --cc-primary: #9B72AA;
+    --cc-primary-hover: #8a6199;
+    --cc-accent: #C9A7D8;
+    --cc-text: #2E1A3B;
+    --cc-muted: #6B5278;
+    --cc-border: rgba(155, 114, 170, 0.2);
+    --cc-card-bg: rgba(255, 255, 255, 0.88);
+    --cc-glass: rgba(240, 230, 246, 0.7);
+    --cc-glass-border: rgba(155, 114, 170, 0.15);
+    --cc-shadow-glow: 0 0 25px rgba(155, 114, 170, 0.25);
+}
+
+[data-mood="crisis"].dark {
+    --cc-bg: #1E1629;
+    --cc-surface: #2E2040;
+    --cc-surface-hover: #3e3050;
+    --cc-primary: #B98FCA;
+    --cc-primary-hover: #a77db8;
+    --cc-accent: #9B72AA;
+    --cc-text: #EDE4F3;
+    --cc-muted: #A890B8;
+    --cc-border: rgba(185, 143, 202, 0.15);
+    --cc-card-bg: rgba(46, 32, 64, 0.85);
+    --cc-glass: rgba(30, 22, 41, 0.7);
+    --cc-glass-border: rgba(185, 143, 202, 0.1);
+}
+
+/* Crisis mode atmosphere — subtle pulsing */
+[data-mood="crisis"] #atmosphere {
+    background: radial-gradient(ellipse at 50% 0%, rgba(155, 114, 170, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 80%, rgba(201, 167, 216, 0.06) 0%, transparent 40%);
+    animation: crisis-pulse 4s ease-in-out infinite;
+}
+
+@keyframes crisis-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* --- BURNOUT MODE --- */
+[data-mood="burnout"] {
+    --cc-bg: #F5F0EB;
+    --cc-surface: #EAE0D5;
+    --cc-surface-hover: #ddd2c5;
+    --cc-primary: #A89F91;
+    --cc-primary-hover: #978e80;
+    --cc-accent: #D4A5A5;
+    --cc-text: #3C3633;
+    --cc-muted: #8C8279;
+    --cc-border: rgba(168, 159, 145, 0.2);
+    --cc-card-bg: rgba(255, 255, 255, 0.85);
+    --cc-glass: rgba(245, 240, 235, 0.7);
+    --cc-glass-border: rgba(168, 159, 145, 0.15);
+    --cc-shadow-glow: 0 0 20px rgba(168, 159, 145, 0.2);
+}
+
+[data-mood="burnout"].dark {
+    --cc-bg: #1F1C19;
+    --cc-surface: #2E2A25;
+    --cc-surface-hover: #3e3a35;
+    --cc-primary: #C4AFA0;
+    --cc-primary-hover: #b49f90;
+    --cc-accent: #D4A5A5;
+    --cc-text: #EDE8E3;
+    --cc-muted: #A89F91;
+    --cc-border: rgba(196, 175, 160, 0.15);
+    --cc-card-bg: rgba(46, 42, 37, 0.85);
+    --cc-glass: rgba(31, 28, 25, 0.7);
+    --cc-glass-border: rgba(196, 175, 160, 0.1);
+}
+
+/* Burnout mode — very subtle, slow breathing atmosphere */
+[data-mood="burnout"] #atmosphere {
+    background: radial-gradient(ellipse at 50% 50%, rgba(212, 165, 165, 0.06) 0%, transparent 60%);
+    animation: burnout-breathe 6s ease-in-out infinite;
+}
+
+@keyframes burnout-breathe {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* --- 3AM MODE (overlay on any state) --- */
+[data-mood-overlay="3am"] {
+    --cc-bg: #0A0A1A;
+    --cc-surface: #151530;
+    --cc-surface-hover: #1a1a3a;
+    --cc-primary: #818CF8;
+    --cc-primary-hover: #6d78e4;
+    --cc-accent: #6366F1;
+    --cc-text: #C7C8E0;
+    --cc-muted: #6B6D99;
+    --cc-border: rgba(129, 140, 248, 0.1);
+    --cc-card-bg: rgba(21, 21, 48, 0.9);
+    --cc-glass: rgba(10, 10, 26, 0.8);
+    --cc-glass-border: rgba(99, 102, 241, 0.1);
+    --cc-shadow-glow: 0 0 30px rgba(129, 140, 248, 0.15);
+}
+
+[data-mood-overlay="3am"] #atmosphere {
+    background: 
+        radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(129, 140, 248, 0.03) 0%, transparent 40%);
+    animation: night-twinkle 8s ease-in-out infinite;
+}
+
+@keyframes night-twinkle {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* 3AM mode specific styles */
+[data-mood-overlay="3am"] .cc-btn-primary {
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+[data-mood-overlay="3am"] .nav-bar {
+    background: rgba(10, 10, 26, 0.9) !important;
+}
+
+/* --- Stable mode atmosphere --- */
+[data-mood="stable"] #atmosphere {
+    background: radial-gradient(ellipse at 70% 0%, rgba(164, 195, 178, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 100%, rgba(107, 144, 128, 0.05) 0%, transparent 40%);
+}
+
+/* --- State transition helper --- */
+.state-transitioning * {
+    transition-duration: 0s !important;
+}
+
+/* Nav bar state awareness */
+[data-mood="pressure"] .nav-tab.active .nav-icon {
+    color: #CB997E;
+}
+[data-mood="crisis"] .nav-tab.active .nav-icon {
+    color: #9B72AA;
+}
+[data-mood="burnout"] .nav-tab.active .nav-icon {
+    color: #A89F91;
+}

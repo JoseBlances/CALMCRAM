@@ -1,0 +1,839 @@
+/* ============================================
+   CramCalm — Component Styles
+   ============================================ */
+
+/* --- Weather Widget --- */
+.weather-widget {
+    position: relative;
+    border-radius: var(--cc-radius-xl);
+    padding: var(--cc-gap-lg);
+    background: linear-gradient(135deg, var(--cc-primary), var(--cc-accent));
+    color: white;
+    overflow: hidden;
+    min-height: 140px;
+}
+
+.weather-widget::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.weather-icon {
+    font-size: 3rem;
+    line-height: 1;
+    animation: float 3s ease-in-out infinite;
+}
+
+.weather-temp {
+    font-family: var(--cc-font-heading);
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.weather-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* --- Cram Risk Gauge --- */
+.cram-gauge {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.cram-gauge-ring {
+    transform: rotate(-90deg);
+}
+
+.cram-gauge-bg {
+    fill: none;
+    stroke: var(--cc-surface);
+    stroke-width: 8;
+}
+
+.cram-gauge-fill {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 0.5s ease;
+}
+
+.cram-gauge-value {
+    font-family: var(--cc-font-heading);
+    font-size: 1.75rem;
+    font-weight: 900;
+}
+
+.cram-gauge-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--cc-muted);
+}
+
+/* --- Task Card --- */
+.task-card {
+    background: var(--cc-card-bg);
+    border-radius: var(--cc-radius-lg);
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--cc-border);
+    border-left: 3px solid var(--cc-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    transition: all var(--cc-transition-base);
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.task-card:active {
+    transform: scale(0.98);
+}
+
+.task-card.completed {
+    opacity: 0.5;
+    border-left-color: var(--cc-success) !important;
+}
+
+.task-card.completed .task-title {
+    text-decoration: line-through;
+    color: var(--cc-muted);
+}
+
+/* Priority border accent */
+.task-card:has(.task-priority.panic) {
+    border-left-color: var(--cc-danger);
+}
+.task-card:has(.task-priority.serious) {
+    border-left-color: var(--cc-warning);
+}
+.task-card:has(.task-priority.chill) {
+    border-left-color: var(--cc-success);
+}
+
+.task-card-swipe-bg {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+    font-weight: 700;
+}
+
+.task-card-swipe-bg.left {
+    left: 0;
+    background: var(--cc-success);
+    border-radius: var(--cc-radius-lg) 0 0 var(--cc-radius-lg);
+}
+
+.task-card-swipe-bg.right {
+    right: 0;
+    background: var(--cc-danger);
+    border-radius: 0 var(--cc-radius-lg) var(--cc-radius-lg) 0;
+}
+
+.task-checkbox {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--cc-border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--cc-transition-spring);
+    margin-top: 2px;
+    background: transparent;
+}
+
+.task-checkbox:hover {
+    border-color: var(--cc-primary);
+    transform: scale(1.1);
+}
+
+.task-checkbox:active {
+    transform: scale(0.85);
+}
+
+.task-checkbox.checked {
+    background: var(--cc-primary);
+    border-color: var(--cc-primary);
+    animation: popIn 0.3s ease-out;
+}
+
+.task-checkbox.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.task-title {
+    font-family: var(--cc-font-heading);
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.task-priority {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--cc-radius-full);
+    font-weight: 600;
+}
+
+.task-priority.chill {
+    background: rgba(52, 211, 153, 0.15);
+    color: #059669;
+}
+
+.task-priority.serious {
+    background: rgba(251, 191, 36, 0.15);
+    color: #B45309;
+}
+
+.task-priority.panic {
+    background: rgba(239, 68, 68, 0.15);
+    color: #DC2626;
+}
+
+.task-deadline {
+    font-size: 0.72rem;
+    color: var(--cc-muted);
+    font-weight: 500;
+}
+
+/* Overdue chip count badge */
+.overdue-count-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cc-danger);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    margin-left: 4px;
+    padding: 0 4px;
+}
+
+/* Priority selector cards in modal */
+#priority-selector .cc-card.active {
+    ring: 2px solid var(--cc-primary);
+    box-shadow: 0 0 0 2px var(--cc-primary);
+}
+
+#priority-selector .cc-card:active {
+    transform: scale(0.95);
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- Chat UI --- */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 80px;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 0.875rem 1.125rem;
+    border-radius: var(--cc-radius-lg);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.chat-bubble.ai {
+    align-self: flex-start;
+    background: var(--cc-card-bg);
+    border: 1px solid var(--cc-border);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.user {
+    align-self: flex-end;
+    background: var(--cc-primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-typing {
+    display: flex;
+    gap: 4px;
+    padding: 0.875rem 1.125rem;
+    align-self: flex-start;
+    background: var(--cc-card-bg);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-radius-lg);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-typing .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--cc-muted);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+}
+
+.chat-typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing .dot:nth-child(3) { animation-delay: 0.4s; }
+
+.chat-input-bar {
+    position: fixed;
+    bottom: 5rem;
+    left: 0;
+    right: 0;
+    padding: 0.75rem var(--cc-page-px);
+    background: var(--cc-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--cc-border);
+    z-index: var(--z-sticky);
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.chat-input-bar .input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* --- Timer Ring --- */
+.timer-display {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto;
+}
+
+.timer-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-ring-bg {
+    fill: none;
+    stroke: var(--cc-surface);
+    stroke-width: 6;
+}
+
+.timer-ring-progress {
+    fill: none;
+    stroke: var(--cc-primary);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.timer-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.timer-time {
+    font-family: var(--cc-font-heading);
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--cc-text);
+}
+
+.timer-label {
+    font-size: 0.85rem;
+    color: var(--cc-muted);
+    margin-top: 0.25rem;
+}
+
+/* --- Wisdom Tree --- */
+.tree-container {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tree-emoji {
+    font-size: 8rem;
+    line-height: 1;
+    animation: breathe 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.1));
+}
+
+.tree-glow {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--cc-accent), transparent 70%);
+    opacity: 0.2;
+    animation: breathe 4s ease-in-out infinite;
+}
+
+.tree-stage-label {
+    font-family: var(--cc-font-heading);
+    font-weight: 800;
+    font-size: 1.25rem;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.tree-xp-bar {
+    width: 100%;
+    max-width: 200px;
+    margin: 0.5rem auto 0;
+    height: 8px;
+    background: var(--cc-surface);
+    border-radius: var(--cc-radius-full);
+    overflow: hidden;
+}
+
+.tree-xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cc-primary), var(--cc-accent));
+    border-radius: var(--cc-radius-full);
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --- Heatmap --- */
+.heatmap-container {
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 14px;
+    gap: 3px;
+    min-width: max-content;
+}
+
+.heatmap-cell {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.4);
+    z-index: 10;
+}
+
+.heatmap-cell.level-0 { background: var(--cc-surface); }
+.heatmap-cell.level-1 { background: #A4C3B2; }
+.heatmap-cell.level-2 { background: #6B9080; }
+.heatmap-cell.level-3 { background: #4A7C6B; }
+.heatmap-cell.level-4 { background: #2D5A47; }
+
+.dark .heatmap-cell.level-0 { background: var(--cc-surface); }
+.dark .heatmap-cell.level-1 { background: #3B6B55; }
+.dark .heatmap-cell.level-2 { background: #5A9A7D; }
+.dark .heatmap-cell.level-3 { background: #7EC8A8; }
+.dark .heatmap-cell.level-4 { background: #A8E6C8; }
+
+.heatmap-tooltip {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--cc-text);
+    color: var(--cc-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+.heatmap-cell:hover .heatmap-tooltip {
+    opacity: 1;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--cc-muted);
+}
+
+.heatmap-legend .heatmap-cell {
+    width: 12px;
+    height: 12px;
+}
+
+/* --- Backpack Stress Meter --- */
+.backpack-meter {
+    position: relative;
+    text-align: center;
+}
+
+.backpack-icon {
+    font-size: 4rem;
+    line-height: 1;
+    transition: transform 0.5s ease;
+}
+
+.backpack-icon.heavy {
+    animation: shake 0.5s ease-in-out;
+}
+
+.backpack-weight-bar {
+    width: 120px;
+    height: 8px;
+    background: var(--cc-surface);
+    border-radius: var(--cc-radius-full);
+    overflow: hidden;
+    margin: 0.5rem auto 0;
+}
+
+.backpack-weight-fill {
+    height: 100%;
+    border-radius: var(--cc-radius-full);
+    transition: width 0.8s ease, background-color 0.5s ease;
+}
+
+/* --- Focus Mode Lock Screen --- */
+.focus-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-focus-mode);
+    background: var(--cc-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease;
+}
+
+.focus-task-name {
+    font-family: var(--cc-font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--cc-muted);
+    text-align: center;
+    max-width: 280px;
+}
+
+/* Lock screen notification items */
+#silent-notification-list > div {
+    transition: all 0.3s ease;
+}
+
+#silent-notification-list > div:active {
+    transform: scale(0.97);
+}
+
+/* Break return countdown huge number */
+#return-countdown-number {
+    font-family: var(--cc-font-heading);
+    animation: countdown-tick 1s ease-out;
+}
+
+@keyframes countdown-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Focus lock screen - hide scrollbar but allow scroll */
+#focus-active {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+#focus-active::-webkit-scrollbar {
+    display: none;
+}
+
+/* Break screen gradient overlay */
+#break-screen > div:first-child {
+    background: linear-gradient(180deg, rgba(107,144,128,0.85) 0%, rgba(45,84,71,0.95) 100%) !important;
+}
+
+.dark #break-screen > div:first-child {
+    background: linear-gradient(180deg, rgba(36,52,71,0.9) 0%, rgba(26,35,50,0.98) 100%) !important;
+}
+
+/* Modify time buttons in focus mode */
+#modify-time-row button {
+    min-width: 2.5rem;
+    border: 1px solid var(--cc-border);
+}
+
+#modify-time-row button:hover {
+    background: var(--cc-surface);
+}
+
+/* --- Notification Toast --- */
+.toast {
+    background: var(--cc-card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-radius-lg);
+    padding: 0.875rem 1.125rem;
+    box-shadow: var(--cc-shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    animation: slideUpSpring 0.4s ease-out;
+    pointer-events: all;
+    max-width: 100%;
+}
+
+.toast-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.toast-message {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.toast-close {
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 1rem;
+    padding: 0.25rem;
+    border: none;
+    background: none;
+    color: var(--cc-text);
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+.toast.leaving {
+    animation: fadeOutDown 0.3s ease-in forwards;
+}
+
+/* --- Personality Badge --- */
+.personality-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--cc-primary), var(--cc-accent));
+    color: white;
+    border-radius: var(--cc-radius-full);
+    font-family: var(--cc-font-heading);
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 14px rgba(107, 144, 128, 0.3);
+}
+
+/* --- Quick Stats Row --- */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-card {
+    background: var(--cc-card-bg);
+    border-radius: var(--cc-radius-lg);
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--cc-border);
+}
+
+.stat-value {
+    font-family: var(--cc-font-heading);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--cc-primary);
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cc-muted);
+    margin-top: 0.15rem;
+}
+
+/* --- Suggestion Chips --- */
+.chip-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.chip {
+    padding: 0.5rem 1rem;
+    background: var(--cc-surface);
+    border-radius: var(--cc-radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--cc-text);
+    cursor: pointer;
+    transition: all var(--cc-transition-base);
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.chip:hover {
+    background: var(--cc-primary);
+    color: white;
+    border-color: var(--cc-primary);
+}
+
+.chip.active {
+    background: var(--cc-primary);
+    color: white;
+}
+
+/* --- Brain Dump --- */
+.braindump-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 1.25rem;
+    font-family: var(--cc-font-body);
+    font-size: 1rem;
+    line-height: 1.8;
+    background: var(--cc-card-bg);
+    color: var(--cc-text);
+    border: 2px dashed var(--cc-border);
+    border-radius: var(--cc-radius-xl);
+    outline: none;
+    resize: vertical;
+    transition: border-color var(--cc-transition-base);
+}
+
+.braindump-textarea:focus {
+    border-color: var(--cc-primary);
+    border-style: solid;
+}
+
+.braindump-textarea::placeholder {
+    color: var(--cc-muted);
+    opacity: 0.6;
+}
+
+/* --- Streak Counter --- */
+.streak-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--cc-font-heading);
+    font-weight: 800;
+}
+
+.streak-flame {
+    font-size: 1.5rem;
+    animation: wiggle 1s ease-in-out infinite;
+}
+
+.streak-count {
+    font-size: 1.25rem;
+    color: var(--cc-primary);
+}
+
+/* --- Energy Level --- */
+.energy-bar {
+    display: flex;
+    gap: 3px;
+}
+
+.energy-segment {
+    width: 8px;
+    height: 24px;
+    border-radius: 2px;
+    background: var(--cc-surface);
+    transition: background 0.3s ease;
+}
+
+.energy-segment.filled {
+    background: var(--cc-primary);
+}
+
+.energy-segment.low {
+    background: var(--cc-danger);
+}
+
+/* --- Onboarding --- */
+.onboarding-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--cc-gap-xl);
+    text-align: center;
+}
+
+.onboarding-emoji {
+    font-size: 5rem;
+    margin-bottom: var(--cc-gap-lg);
+    animation: float 3s ease-in-out infinite;
+}
+
+.onboarding-title {
+    font-family: var(--cc-font-heading);
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: var(--cc-gap-sm);
+}
+
+.onboarding-subtitle {
+    color: var(--cc-muted);
+    font-size: 1rem;
+    margin-bottom: var(--cc-gap-xl);
+    max-width: 300px;
+}
