@@ -14,6 +14,11 @@ const CramTimer = (() => {
     let selectedMinutes = 25;
     let totalSeconds = 0;
     let remainingSeconds = 0;
+    // The countdown follows the clock, so it stays right when the screen sleeps or the tab
+    // is in the background (browsers slow setInterval down there).
+    let focusEndsAt = 0;
+    let breakEndsAt = 0;
+    let breakIntervalId = null;
     let intervalId = null;
     let selectedTaskId = null;
     let sessionStartTime = null;
@@ -48,6 +53,7 @@ const CramTimer = (() => {
         const page = new URLSearchParams(window.location.search).get('page');
         if (page !== 'focus') return;
 
+        applyDefaultDuration();
         populateTaskSelect();
         renderBypassList();
         renderHistory();
@@ -57,6 +63,44 @@ const CramTimer = (() => {
         document.getElementById('duration-selector')?.addEventListener('click', () => {
             setTimeout(updateBreakPreview, 50);
         });
+
+        // Enter submits the custom duration and the bypass name
+        document.getElementById('custom-duration')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') setCustomDuration();
+        });
+        document.getElementById('bypass-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addBypass();
+        });
+
+        // Catch up at once when the screen wakes or the tab comes back
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) return;
+            if (state === 'focusing') tick();
+            else if (state === 'onBreak') breakTick();
+        });
+    }
+
+    /** Preselects the default focus length chosen in Settings. */
+    function applyDefaultDuration() {
+        const preferred = parseInt(CramStore.get('settings.focusDuration'));
+        if (!preferred) return;
+        selectedMinutes = preferred;
+        const selector = document.getElementById('duration-selector');
+        selector?.querySelectorAll('.cc-card').forEach(b => {
+            const match = parseInt(b.dataset.mins) === preferred;
+            b.classList.toggle('ring-2', match);
+            b.classList.toggle('ring-[var(--cc-primary)]', match);
+        });
+    }
+
+    /** Short break length from Settings (5 min by default); a long break is twice that, at least 10 min. */
+    function shortBreakSeconds() {
+        const minutes = parseInt(CramStore.get('settings.breakDuration')) || 5;
+        return Math.min(30, Math.max(1, minutes)) * 60;
+    }
+
+    function longBreakSeconds() {
+        return Math.max(10 * 60, shortBreakSeconds() * 2);
     }
 
     // ═══════════════════════════════════════════════════
@@ -114,19 +158,21 @@ const CramTimer = (() => {
     function calculateBreakSchedule(totalMins) {
         const schedule = [];
         const totalSecs = totalMins * 60;
+        const shortSecs = shortBreakSeconds();
+        const longSecs = longBreakSeconds();
 
         if (totalMins <= 20) {
             // No breaks
         } else if (totalMins <= 30) {
             // 1 short break at halfway
-            schedule.push({ atElapsed: Math.floor(totalSecs / 2), duration: 5 * 60, type: 'short', taken: false });
+            schedule.push({ atElapsed: Math.floor(totalSecs / 2), duration: shortSecs, type: 'short', taken: false });
         } else if (totalMins <= 45) {
             // 1 short break at halfway
-            schedule.push({ atElapsed: Math.floor(totalSecs / 2), duration: 5 * 60, type: 'short', taken: false });
+            schedule.push({ atElapsed: Math.floor(totalSecs / 2), duration: shortSecs, type: 'short', taken: false });
         } else if (totalMins <= 60) {
             // 2 short breaks evenly spaced (at 1/3 and 2/3)
-            schedule.push({ atElapsed: Math.floor(totalSecs / 3), duration: 5 * 60, type: 'short', taken: false });
-            schedule.push({ atElapsed: Math.floor((totalSecs / 3) * 2), duration: 5 * 60, type: 'short', taken: false });
+            schedule.push({ atElapsed: Math.floor(totalSecs / 3), duration: shortSecs, type: 'short', taken: false });
+            schedule.push({ atElapsed: Math.floor((totalSecs / 3) * 2), duration: shortSecs, type: 'short', taken: false });
         } else if (totalMins <= 90) {
             // Short breaks every ~25 min + 1 long break
             const segments = Math.floor(totalMins / 25);
@@ -134,7 +180,7 @@ const CramTimer = (() => {
                 const isLast = (i === segments - 1);
                 schedule.push({
                     atElapsed: i * 25 * 60,
-                    duration: isLast ? 10 * 60 : 5 * 60,
+                    duration: isLast ? longSecs : shortSecs,
                     type: isLast ? 'long' : 'short',
                     taken: false
                 });
@@ -148,7 +194,7 @@ const CramTimer = (() => {
                 const isLong = (breakCount % 2 === 0); // every other break is long
                 schedule.push({
                     atElapsed: elapsed,
-                    duration: isLong ? 10 * 60 : 5 * 60,
+                    duration: isLong ? longSecs : shortSecs,
                     type: isLong ? 'long' : 'short',
                     taken: false
                 });
@@ -170,9 +216,8 @@ const CramTimer = (() => {
             const shorts = schedule.filter(b => b.type === 'short').length;
             const longs = schedule.filter(b => b.type === 'long').length;
             let text = '';
-            if (shorts > 0) text += `${shorts} short break${shorts > 1 ? 's' : ''} (5 min)`;
-            if (longs > 0) text += `${text ? ' + ' : ''}${longs} long break${longs > 1 ? 's' : ''} (10 min)`;
-            text += '\n';
+            if (shorts > 0) text += `${shorts} short break${shorts > 1 ? 's' : ''} (${shortBreakSeconds() / 60} min)`;
+            if (longs > 0) text += `${text ? ' + ' : ''}${longs} long break${longs > 1 ? 's' : ''} (${longBreakSeconds() / 60} min)`;
 
             // Show break times
             const times = schedule.map(b => `${b.type === 'long' ? '🟢' : '☕'} at ${Math.floor(b.atElapsed / 60)} min`);
@@ -197,13 +242,19 @@ const CramTimer = (() => {
             return;
         }
 
-        container.innerHTML = list.map(name => `
+        container.innerHTML = list.map((name, index) => `
             <span class="cc-badge cc-badge-primary flex items-center gap-1">
-                ${name}
-                <button class="ml-1 opacity-60 hover:opacity-100 bg-transparent border-0 cursor-pointer text-inherit" 
-                    onclick="CramTimer.removeBypass('${name.replace(/'/g, "\\'")}')" title="Remove">✕</button>
+                ${escapeHtml(name)}
+                <button class="ml-1 opacity-60 hover:opacity-100 bg-transparent border-0 cursor-pointer text-inherit"
+                    onclick="CramTimer.removeBypass(${index})" title="Remove" aria-label="Remove ${escapeHtml(name)}">✕</button>
             </span>
         `).join('');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML.replace(/"/g, '&quot;');
     }
 
     function addBypass() {
@@ -223,8 +274,8 @@ const CramTimer = (() => {
         CramNotify.success(`"${name}" will bypass focus mode 🔔`);
     }
 
-    function removeBypass(name) {
-        const list = getBypassList().filter(n => n !== name);
+    function removeBypass(index) {
+        const list = getBypassList().filter((_, i) => i !== index);
         CramStore.set('settings.bypassContacts', list);
         renderBypassList();
     }
@@ -241,7 +292,11 @@ const CramTimer = (() => {
         breaksTaken = 0;
         totalBreakTime = 0;
         sessionStartTime = new Date().toISOString();
+        focusEndsAt = Date.now() + remainingSeconds * 1000;
         state = 'focusing';
+
+        // A session ended while paused must not leave "Paused" behind for the next one
+        showFocusPhase('Stay focused');
 
         // Switch to lock screen
         document.getElementById('focus-setup').classList.add('hidden');
@@ -290,7 +345,7 @@ const CramTimer = (() => {
     function tick() {
         if (state !== 'focusing') return;
 
-        remainingSeconds--;
+        remainingSeconds = Math.max(0, Math.round((focusEndsAt - Date.now()) / 1000));
         const elapsed = totalSeconds - remainingSeconds;
 
         // Check for scheduled breaks
@@ -345,20 +400,21 @@ const CramTimer = (() => {
     function adjustTime(deltaMinutes) {
         if (state !== 'focusing' && state !== 'paused') return;
 
-        const deltaSecs = deltaMinutes * 60;
-        remainingSeconds = Math.max(60, remainingSeconds + deltaSecs); // min 1 minute
-        totalSeconds = Math.max(totalSeconds, (totalSeconds - remainingSeconds) + remainingSeconds); // extend total if adding
+        if (state === 'focusing') {
+            remainingSeconds = Math.max(0, Math.round((focusEndsAt - Date.now()) / 1000));
+        }
+        // The session's length changes with it, so time already focused stays as it was
+        const elapsed = totalSeconds - remainingSeconds;
+        remainingSeconds = Math.max(60, remainingSeconds + deltaMinutes * 60); // min 1 minute
+        totalSeconds = elapsed + remainingSeconds;
+        focusEndsAt = Date.now() + remainingSeconds * 1000;
 
         if (deltaMinutes > 0) {
-            // Recalculate breaks for added time if we extended past original
-            const newTotalMins = Math.ceil(totalSeconds / 60);
-            const elapsed = totalSeconds - remainingSeconds;
-
             // Add new breaks if time was extended significantly
             if (deltaMinutes >= 10) {
                 const newBreak = {
                     atElapsed: elapsed + Math.floor((remainingSeconds) / 2),
-                    duration: 5 * 60,
+                    duration: shortBreakSeconds(),
                     type: 'short',
                     taken: false
                 };
@@ -390,16 +446,16 @@ const CramTimer = (() => {
         const breakTitle = document.getElementById('break-title');
         const breakSubtitle = document.getElementById('break-subtitle');
         const breakTypeLabel = document.getElementById('break-type-label');
-        const breakTimerDisplay = document.getElementById('break-timer-display');
+        const minutes = Math.round(breakInfo.duration / 60);
 
         if (breakInfo.type === 'long') {
             breakTitle.textContent = 'Long Break! 🎉';
             breakSubtitle.textContent = "You've been grinding hard. Take a real rest!";
-            breakTypeLabel.textContent = 'Long Break (10 min)';
+            breakTypeLabel.textContent = `Long Break (${minutes} min)`;
         } else {
             breakTitle.textContent = 'Break Time! ☕';
             breakSubtitle.textContent = "You've earned a rest. Use your phone freely!";
-            breakTypeLabel.textContent = 'Short Break (5 min)';
+            breakTypeLabel.textContent = `Short Break (${minutes} min)`;
         }
 
         breakScreen.classList.remove('hidden');
@@ -409,33 +465,34 @@ const CramTimer = (() => {
             CramWatch.syncBreakStart(breakInfo.type);
         }
 
-        // Break countdown
-        let breakRemaining = breakInfo.duration;
         totalBreakTime += breakInfo.duration;
+        runBreakCountdown(breakInfo.duration);
+    }
 
-        const breakInterval = setInterval(() => {
-            breakRemaining--;
-            const m = Math.floor(breakRemaining / 60);
-            const s = breakRemaining % 60;
-            if (breakTimerDisplay) {
-                breakTimerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-            }
+    /** Counts a break down by the clock; the last 5 seconds show the "returning" overlay. */
+    function runBreakCountdown(seconds) {
+        clearInterval(breakIntervalId);
+        breakEndsAt = Date.now() + seconds * 1000;
+        breakTick();
+        breakIntervalId = setInterval(breakTick, 1000);
+    }
 
-            // Last 6 seconds: show return countdown
-            if (breakRemaining <= 5 && breakRemaining > 0) {
-                showReturnCountdown(breakRemaining);
-            }
-
-            if (breakRemaining <= 0) {
-                clearInterval(breakInterval);
-                hideReturnCountdown();
-                breakScreen.classList.add('hidden');
-                resumeAfterBreak();
-            }
-        }, 1000);
-
-        // Store break interval ID so we can clear it on skip
-        breakScreen.dataset.intervalId = breakInterval;
+    function breakTick() {
+        if (state !== 'onBreak') return;
+        const breakRemaining = Math.max(0, Math.round((breakEndsAt - Date.now()) / 1000));
+        const display = document.getElementById('break-timer-display');
+        if (display) {
+            display.textContent = `${Math.floor(breakRemaining / 60)}:${(breakRemaining % 60).toString().padStart(2, '0')}`;
+        }
+        if (breakRemaining <= 5 && breakRemaining > 0) {
+            showReturnCountdown(breakRemaining);
+        }
+        if (breakRemaining <= 0) {
+            clearInterval(breakIntervalId);
+            hideReturnCountdown();
+            document.getElementById('break-screen')?.classList.add('hidden');
+            resumeAfterBreak();
+        }
     }
 
     function showReturnCountdown(n) {
@@ -460,11 +517,12 @@ const CramTimer = (() => {
     }
 
     function resumeAfterBreak() {
+        clearInterval(breakIntervalId);
         state = 'focusing';
-        const phaseEl = document.getElementById('focus-phase');
-        const statusEl = document.getElementById('timer-status');
-        if (phaseEl) phaseEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[var(--cc-primary)] mr-2 animate-pulse"></span>Focus Time';
-        if (statusEl) statusEl.textContent = 'Welcome back! 💪';
+        showFocusPhase('Welcome back! 💪');
+        // Break time doesn't count: the focus countdown carries on from where it stopped
+        focusEndsAt = Date.now() + remainingSeconds * 1000;
+        clearInterval(intervalId);
         intervalId = setInterval(tick, 1000);
         updateDisplay();
 
@@ -477,45 +535,29 @@ const CramTimer = (() => {
     }
 
     function skipBreak() {
-        const breakScreen = document.getElementById('break-screen');
-        const intId = breakScreen?.dataset.intervalId;
-        if (intId) clearInterval(parseInt(intId));
-        breakScreen?.classList.add('hidden');
+        clearInterval(breakIntervalId);
+        document.getElementById('break-screen')?.classList.add('hidden');
         hideReturnCountdown();
         resumeAfterBreak();
     }
 
     function extendBreak() {
-        // Extend break by 2 minutes by hiding countdown and restarting
+        if (state !== 'onBreak') return;
         hideReturnCountdown();
-        const breakScreen = document.getElementById('break-screen');
-        const breakTimerDisplay = document.getElementById('break-timer-display');
-
-        breakScreen?.classList.remove('hidden');
-
-        let extendRemaining = 120; // 2 minutes
+        document.getElementById('break-screen')?.classList.remove('hidden');
+        // Two more minutes on top of whatever is left
+        const left = Math.max(0, Math.round((breakEndsAt - Date.now()) / 1000));
         totalBreakTime += 120;
-
-        const extendInterval = setInterval(() => {
-            extendRemaining--;
-            const m = Math.floor(extendRemaining / 60);
-            const s = extendRemaining % 60;
-            if (breakTimerDisplay) breakTimerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-
-            if (extendRemaining <= 5 && extendRemaining > 0) {
-                showReturnCountdown(extendRemaining);
-            }
-
-            if (extendRemaining <= 0) {
-                clearInterval(extendInterval);
-                hideReturnCountdown();
-                breakScreen?.classList.add('hidden');
-                resumeAfterBreak();
-            }
-        }, 1000);
-
-        breakScreen.dataset.intervalId = extendInterval;
+        runBreakCountdown(left + 120);
         CramNotify.show({ message: "+2 minutes added to break ☕", icon: "⏰", duration: 1500 });
+    }
+
+    /** The phase line and status under the timer while focusing. */
+    function showFocusPhase(status) {
+        const phaseEl = document.getElementById('focus-phase');
+        const statusEl = document.getElementById('timer-status');
+        if (phaseEl) phaseEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[var(--cc-primary)] mr-2 animate-pulse"></span>Focus Time';
+        if (statusEl) statusEl.textContent = status;
     }
 
     // ═══════════════════════════════════════════════════
@@ -630,17 +672,19 @@ const CramTimer = (() => {
         const phaseEl = document.getElementById('focus-phase');
 
         if (state === 'focusing') {
+            remainingSeconds = Math.max(0, Math.round((focusEndsAt - Date.now()) / 1000));
             state = 'paused';
             clearInterval(intervalId);
             if (btn) btn.innerHTML = '▶ Resume';
             if (phaseEl) phaseEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[var(--cc-warning)] mr-2"></span>Paused';
             document.getElementById('timer-status').textContent = 'Paused';
+            updateDisplay();
         } else if (state === 'paused') {
             state = 'focusing';
+            focusEndsAt = Date.now() + remainingSeconds * 1000;
             intervalId = setInterval(tick, 1000);
             if (btn) btn.innerHTML = '⏸ Pause';
-            if (phaseEl) phaseEl.innerHTML = '<span class="inline-block w-2 h-2 rounded-full bg-[var(--cc-primary)] mr-2 animate-pulse"></span>Focus Time';
-            document.getElementById('timer-status').textContent = 'Stay focused';
+            showFocusPhase('Stay focused');
         }
     }
 
@@ -654,12 +698,18 @@ const CramTimer = (() => {
 
     function stop() {
         document.getElementById('confirm-stop-modal')?.classList.remove('active');
+        if (state === 'idle') return;
 
+        if (state === 'focusing') {
+            remainingSeconds = Math.max(0, Math.round((focusEndsAt - Date.now()) / 1000));
+        }
         clearInterval(intervalId);
+        clearInterval(breakIntervalId);
         clearInterval(clockInterval);
         clearNotifTimeouts();
+        state = 'idle';
 
-        const elapsed = totalSeconds - remainingSeconds;
+        const elapsed = Math.max(0, totalSeconds - remainingSeconds);
         const mins = Math.floor(elapsed / 60);
 
         if (mins > 0) {
@@ -677,10 +727,8 @@ const CramTimer = (() => {
 
     function endSession() {
         // Called from break screen
-        const breakScreen = document.getElementById('break-screen');
-        const intId = breakScreen?.dataset.intervalId;
-        if (intId) clearInterval(parseInt(intId));
-        breakScreen?.classList.add('hidden');
+        clearInterval(breakIntervalId);
+        document.getElementById('break-screen')?.classList.add('hidden');
         hideReturnCountdown();
         stop();
     }
@@ -764,6 +812,7 @@ const CramTimer = (() => {
     // ═══════════════════════════════════════════════════
     function resetUI() {
         clearInterval(intervalId);
+        clearInterval(breakIntervalId);
         clearInterval(clockInterval);
         clearNotifTimeouts();
         state = 'idle';

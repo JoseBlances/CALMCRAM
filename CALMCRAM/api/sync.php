@@ -2,11 +2,11 @@
 /**
  * CramCalm Sync API
  *
- * GET    — load (or create) guest user state
+ * GET    — load authenticated user state
  * POST   — save full client state
  * DELETE — reset user data (Settings → Clear)
  *
- * Identity: X-Guest-Token header or ?token= query / JSON body
+ * Requires X-Guest-Token from a registered (email/password) account.
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/../includes/StateRepository.php';
+require_once __DIR__ . '/../includes/AuthService.php';
 
 function json_response(array $payload, int $code = 200): void
 {
@@ -53,11 +53,20 @@ function guest_token_from_request(array $body = []): ?string
 }
 
 try {
+    $auth = new AuthService();
     $repo = new StateRepository();
     $method = $_SERVER['REQUEST_METHOD'];
     $body = in_array($method, ['POST', 'DELETE'], true) ? read_json_body() : [];
     $token = guest_token_from_request($body);
-    $user = $repo->findOrCreateUser($token);
+
+    $user = $auth->findAuthenticatedByToken($token);
+    if (!$user) {
+        json_response([
+            'ok' => false,
+            'error' => 'Please log in to continue.',
+            'needsAuth' => true,
+        ], 401);
+    }
 
     if ($method === 'GET') {
         $state = $repo->loadState((int) $user['id']);
@@ -65,6 +74,7 @@ try {
             'ok' => true,
             'token' => $user['guest_token'],
             'userId' => (int) $user['id'],
+            'user' => $auth->publicUser($user),
             'state' => $state,
         ]);
     }
@@ -96,7 +106,7 @@ try {
 } catch (PDOException $e) {
     json_response([
         'ok' => false,
-        'error' => 'Database error. Import database/schema.sql in phpMyAdmin and check config.php credentials.',
+        'error' => 'Database error. Import database/schema.sql or migration_auth.sql in phpMyAdmin.',
         'detail' => $e->getMessage(),
     ], 500);
 } catch (Throwable $e) {

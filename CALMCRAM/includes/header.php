@@ -4,9 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="CramCalm — Your emotionally intelligent study companion. Avoid cramming, reduce stress, and ace your academics.">
-    <meta name="theme-color" content="#6B9080">
+    <meta name="theme-color" content="#1A2332" id="meta-theme-color">
+    <meta name="color-scheme" content="dark light">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Apply theme before paint to prevent white flash on navigation -->
+    <script>
+    (function () {
+        try {
+            var dark = true;
+            var raw = localStorage.getItem('cramcalm_data');
+            if (raw) {
+                var settings = (JSON.parse(raw) || {}).settings || {};
+                if (settings.theme === 'light') dark = false;
+                else if (settings.theme === 'dark') dark = true;
+                else if (settings.theme === 'auto') {
+                    dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                } else if (settings.darkMode === false || settings.darkMode === 'false') {
+                    dark = false;
+                }
+            }
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.style.backgroundColor = dark ? '#1A2332' : '#F0F7F4';
+            document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.backgroundColor = '#1A2332';
+        }
+    })();
+    </script>
     
     <title><?= htmlspecialchars($pageTitle ?? 'CramCalm') ?> | CramCalm</title>
 
@@ -50,7 +77,7 @@
     <link rel="stylesheet" href="<?= asset_url('css/states.css') ?>">
     <link rel="stylesheet" href="<?= asset_url('css/components.css') ?>">
 </head>
-<body class="font-body antialiased min-h-screen transition-colors duration-700 overflow-x-hidden">
+<body class="font-body antialiased min-h-screen overflow-x-hidden">
     <!-- Atmosphere layer (background effects) -->
     <div id="atmosphere" class="fixed inset-0 pointer-events-none z-0 transition-opacity duration-1000"></div>
     

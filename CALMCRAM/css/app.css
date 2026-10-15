@@ -103,9 +103,14 @@ body {
     background-color: var(--cc-bg);
     color: var(--cc-text);
     line-height: 1.6;
-    transition: background-color 0.7s ease, color 0.5s ease;
+    /* No long bg transition — causes white flash on page navigation */
+    transition: color 0.2s ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    background-color: var(--cc-bg, #1A2332);
 }
 
 /* Prevent overscroll bounce on iOS */
@@ -496,6 +501,11 @@ a {
     pointer-events: all;
 }
 
+/* Dialogs opened from the focus lock screen (End session, Time's up) must sit above it */
+#page-focus .cc-modal-overlay {
+    z-index: calc(var(--z-focus-mode) + 10);
+}
+
 .cc-modal {
     background: var(--cc-card-bg);
     border-radius: var(--cc-radius-xl) var(--cc-radius-xl) 0 0;
@@ -574,8 +584,10 @@ a {
 .large-touches .cc-btn,
 .large-touches .cc-input,
 .large-touches .chip,
-.large-touches .cc-toggle,
-.large-touches .task-checkbox {
+.large-touches .cc-toggle {
+    min-height: 48px;
+}
+.large-touches .task-checkbox-wrap {
     min-height: 48px;
 }
 .large-touches .chip {
@@ -584,6 +596,10 @@ a {
 }
 .large-touches .nav-tab {
     padding: 0.75rem 1rem;
+}
+.large-touches .task-checkbox-wrap {
+    width: 52px;
+    height: 52px;
 }
 .large-touches .task-checkbox {
     width: 28px;

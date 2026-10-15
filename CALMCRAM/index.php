@@ -21,8 +21,8 @@ if (!file_exists($pagePath)) {
 // Set page title
 $pageTitle = PAGES[$page] ?? 'CramCalm';
 
-// Determine if nav should be hidden (focus mode, onboarding)
-$hideNav = in_array($page, ['onboarding']);
+// Determine if nav should be hidden (auth / onboarding)
+$hideNav = in_array($page, ['onboarding', 'login']);
 
 // Include shared header
 require_once BASE_DIR . '/includes/header.php';

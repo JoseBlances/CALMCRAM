@@ -1,5 +1,5 @@
 /* ============================================
-   CramCalm — Component Styles
+   CramCalm ??? Component Styles
    ============================================ */
 
 /* --- Weather Widget --- */
@@ -84,32 +84,65 @@
 .task-card {
     background: var(--cc-card-bg);
     border-radius: var(--cc-radius-lg);
-    padding: 0.875rem 1rem;
+    padding: 0;
     border: 1px solid var(--cc-border);
     border-left: 3px solid var(--cc-border);
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    transition: all var(--cc-transition-base);
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 52px;
+    align-items: stretch;
+    column-gap: 0;
+    transition: background var(--cc-transition-base), border-color var(--cc-transition-base), opacity var(--cc-transition-base);
     position: relative;
     overflow: hidden;
-    touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
+    min-height: 64px;
 }
 
-.task-card:active {
-    transform: scale(0.98);
+.task-card.task-ghost {
+    grid-template-columns: 52px minmax(0, 1fr);
 }
 
-.task-card.completed {
-    opacity: 0.5;
+.task-card-body {
+    min-width: 0;
+    padding: 0.85rem 0.85rem 0.85rem 0.65rem;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.task-card-actions {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    position: relative;
+    z-index: 5;
+    align-self: stretch;
+}
+
+.task-card.completed,
+.task-card.task-ghost {
+    opacity: 0.55;
+    border-style: dashed;
     border-left-color: var(--cc-success) !important;
+    background: transparent;
+    box-shadow: none;
 }
 
-.task-card.completed .task-title {
+.task-card.completed .task-title,
+.task-card.task-ghost .task-title {
     text-decoration: line-through;
     color: var(--cc-muted);
+    font-weight: 500;
+}
+
+.task-card.task-ghost .task-meta,
+.task-card.task-ghost .task-priority {
+    opacity: 0.65;
+    filter: grayscale(0.4);
 }
 
 /* Priority border accent */
@@ -123,66 +156,96 @@
     border-left-color: var(--cc-success);
 }
 
-.task-card-swipe-bg {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 80px;
-    display: flex;
+.task-checkbox-wrap,
+.task-delete-wrap {
+    width: 100%;
+    height: 100%;
+    min-width: 52px;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    color: white;
-    font-weight: 700;
+    align-self: stretch;
+    position: relative;
+    z-index: 5;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
-.task-card-swipe-bg.left {
-    left: 0;
-    background: var(--cc-success);
-    border-radius: var(--cc-radius-lg) 0 0 var(--cc-radius-lg);
+.task-checkbox-wrap:hover {
+    background: rgba(107, 144, 128, 0.1);
 }
 
-.task-card-swipe-bg.right {
-    right: 0;
-    background: var(--cc-danger);
+.task-delete-wrap:hover {
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.task-card-actions .task-delete-wrap {
+    width: 100%;
+    height: 100%;
     border-radius: 0 var(--cc-radius-lg) var(--cc-radius-lg) 0;
 }
 
+.task-checkbox-wrap {
+    border-radius: var(--cc-radius-lg) 0 0 var(--cc-radius-lg);
+}
+
 .task-checkbox {
-    width: 22px;
-    height: 22px;
-    min-width: 22px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
     border-radius: 50%;
     border: 2px solid var(--cc-border);
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--cc-transition-spring);
-    margin-top: 2px;
+    transition: border-color 0.15s, background 0.15s;
     background: transparent;
+    pointer-events: none;
 }
 
-.task-checkbox:hover {
+.task-checkbox-wrap:hover .task-checkbox,
+.task-checkbox-wrap:focus-visible .task-checkbox {
     border-color: var(--cc-primary);
-    transform: scale(1.1);
 }
 
-.task-checkbox:active {
-    transform: scale(0.85);
+.task-checkbox-wrap:active .task-checkbox {
+    transform: scale(0.92);
 }
 
 .task-checkbox.checked {
     background: var(--cc-primary);
     border-color: var(--cc-primary);
-    animation: popIn 0.3s ease-out;
 }
 
 .task-checkbox.checked::after {
-    content: '✓';
+    content: '\2713';
     color: white;
     font-size: 12px;
     font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.task-delete-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+    color: var(--cc-muted);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.task-delete-wrap:hover .task-delete-icon,
+.task-delete-wrap:focus-visible .task-delete-icon {
+    opacity: 1;
+    color: var(--cc-danger, #DC2626);
 }
 
 .task-title {
@@ -190,6 +253,10 @@
     font-weight: 600;
     font-size: 0.95rem;
     line-height: 1.4;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-decoration: none;
+    color: inherit;
 }
 
 .task-meta {
@@ -246,7 +313,6 @@
 
 /* Priority selector cards in modal */
 #priority-selector .cc-card.active {
-    ring: 2px solid var(--cc-primary);
     box-shadow: 0 0 0 2px var(--cc-primary);
 }
 
@@ -259,13 +325,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 /* --- Chat UI --- */
 .chat-container {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    padding-bottom: 80px;
+    /* room for fixed input bar + bottom nav */
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .chat-bubble {
@@ -315,17 +381,19 @@
 
 .chat-input-bar {
     position: fixed;
-    bottom: 5rem;
+    /* Sit flush on top of the bottom nav (icon + label + safe area) */
+    bottom: calc(3.85rem + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
-    padding: 0.75rem var(--cc-page-px);
+    padding: 0.65rem var(--cc-page-px, 1rem);
     background: var(--cc-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--cc-border);
-    z-index: var(--z-sticky);
-    max-width: 480px;
+    z-index: 40; /* below nav (z-50), above page content */
+    max-width: 32rem; /* match nav max-w-lg */
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .chat-input-bar .input-wrapper {
@@ -836,4 +904,173 @@
     font-size: 1rem;
     margin-bottom: var(--cc-gap-xl);
     max-width: 300px;
+}
+
+/* --- Auth (login / register) --- */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    margin: 0;
+    box-sizing: border-box;
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(107, 144, 128, 0.18), transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(164, 195, 178, 0.25), transparent 45%),
+        var(--cc-bg, #F0F7F4);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 360px;
+    margin: 1.5rem auto;
+    background: var(--cc-surface, #fff);
+    border-radius: 24px;
+    padding: 1.75rem 1.35rem 1.5rem;
+    box-shadow: 0 12px 40px rgba(45, 52, 54, 0.08);
+    border: 1px solid rgba(107, 144, 128, 0.15);
+    box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+    .auth-page {
+        padding: 2.5rem 2rem;
+    }
+
+    .auth-card {
+        margin: 2rem auto;
+        padding: 2rem 1.75rem 1.75rem;
+    }
+}
+
+.auth-brand {
+    text-align: center;
+    margin-bottom: 1.35rem;
+}
+
+.auth-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.auth-title {
+    font-family: var(--cc-font-heading);
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 0;
+    color: var(--cc-text, #2D3436);
+}
+
+.auth-tagline {
+    margin: 0.35rem 0 0;
+    color: var(--cc-muted);
+    font-size: 0.9rem;
+}
+
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    margin-bottom: 1.35rem;
+}
+
+.auth-tab {
+    border: 2px solid var(--cc-primary, #6B9080);
+    background: transparent;
+    font-family: var(--cc-font-heading);
+    font-weight: 900;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    padding: 0.85rem 0.5rem;
+    border-radius: 14px;
+    cursor: pointer;
+    color: var(--cc-primary, #6B9080);
+    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.auth-tab:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(107, 144, 128, 0.28);
+}
+
+.auth-tab.active {
+    background: var(--cc-primary, #6B9080);
+    color: #fff;
+    border-color: var(--cc-primary, #6B9080);
+    box-shadow: 0 6px 18px rgba(107, 144, 128, 0.35);
+}
+
+.auth-tab:not(.active) {
+    background: rgba(107, 144, 128, 0.08);
+}
+
+.auth-label {
+    display: block;
+    font-family: var(--cc-font-heading);
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cc-muted);
+    margin: 0.85rem 0 0.35rem;
+    text-align: left;
+}
+
+.auth-form .cc-input {
+    width: 100%;
+}
+
+.auth-form .cc-btn-primary {
+    margin-top: 1.25rem;
+    font-weight: 900;
+    box-shadow: 0 6px 18px rgba(107, 144, 128, 0.3);
+}
+
+.auth-error {
+    background: rgba(220, 80, 80, 0.1);
+    color: #b33a3a;
+    border: 1px solid rgba(220, 80, 80, 0.25);
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    text-align: left;
+}
+
+.dark .auth-page,
+html.dark .auth-page {
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(107, 144, 128, 0.2), transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(45, 70, 60, 0.4), transparent 45%),
+        #1a2220;
+}
+
+.dark .auth-card,
+html.dark .auth-card {
+    background: #24302c;
+    border-color: rgba(164, 195, 178, 0.15);
+}
+
+.dark .auth-tab,
+html.dark .auth-tab {
+    border-color: #A4C3B2;
+    color: #A4C3B2;
+}
+
+.dark .auth-tab:not(.active),
+html.dark .auth-tab:not(.active) {
+    background: rgba(164, 195, 178, 0.1);
+}
+
+.dark .auth-tab.active,
+html.dark .auth-tab.active {
+    background: #6B9080;
+    color: #fff;
+    border-color: #6B9080;
 }

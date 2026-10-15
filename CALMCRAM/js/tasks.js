@@ -8,7 +8,7 @@ const CramTasks = (() => {
     let selectedPriority = 'chill';
     let selectedCategory = '';
     let currentSort = 'priority'; // priority | deadline | created
-    let showCompleted = false;
+    let showCompleted = true;
 
     const sortModes = ['priority', 'deadline', 'created'];
     const priorityOrder = { panic: 0, serious: 1, chill: 2 };
@@ -23,13 +23,11 @@ const CramTasks = (() => {
         setupFilters();
         setupPrioritySelector();
         setupDeadlineSuggestion();
-        setupSwipeGestures();
         setupCharCount();
         renderTasks(currentFilter);
         updateProgress();
         updateBackpack();
         checkRecovery();
-        maybeShowSwipeHint();
     }
 
     // ═══════════════════════════════════════════════════
@@ -178,17 +176,6 @@ const CramTasks = (() => {
             counter.textContent = len > 0 ? `${len}/120` : '';
             counter.style.color = len > 100 ? 'var(--cc-danger)' : 'var(--cc-muted)';
         });
-    }
-
-    function maybeShowSwipeHint() {
-        const shown = CramStore.get('ui.swipeHintShown');
-        const tasks = CramStore.get('tasks') || [];
-        if (!shown && tasks.length > 0) {
-            const hint = document.getElementById('swipe-hint');
-            if (hint) hint.classList.remove('hidden');
-            CramStore.set('ui.swipeHintShown', true);
-            setTimeout(() => hint?.classList.add('hidden'), 8000);
-        }
     }
 
     // ═══════════════════════════════════════════════════
@@ -474,9 +461,9 @@ const CramTasks = (() => {
         }
 
         container.classList.remove('hidden');
-        const sorted = completedTasks.sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
-        sorted.slice(0, 10).forEach((task, i) => {
-            container.appendChild(createTaskCard(task, i, new Date()));
+        const sorted = [...completedTasks].sort((a, b) => new Date(b.completedAt || 0) - new Date(a.completedAt || 0));
+        sorted.slice(0, 20).forEach((task, i) => {
+            container.appendChild(createTaskCard(task, i, new Date(), { ghost: true }));
         });
 
         requestAnimationFrame(() => {
@@ -487,10 +474,12 @@ const CramTasks = (() => {
         });
     }
 
-    function createTaskCard(task, index, now) {
+    function createTaskCard(task, index, now, options = {}) {
+        const isGhost = !!options.ghost || !!task.completed;
         const div = document.createElement('div');
-        div.className = `task-card ${task.completed ? 'completed' : ''} stagger-item`;
+        div.className = `task-card ${isGhost ? 'completed task-ghost' : ''} stagger-item`;
         div.dataset.taskId = task.id;
+        if (isGhost) div.dataset.ghost = '1';
         div.style.animationDelay = Math.min(index * 0.04, 0.4) + 's';
 
         const priorityConfig = {
@@ -502,25 +491,40 @@ const CramTasks = (() => {
         const dl = task.deadline ? formatSmartDeadline(task.deadline, now) : null;
         const isOverdue = task.deadline && new Date(task.deadline) < now && !task.completed;
         const catBadge = task.category ? `<span class="cc-text-xs cc-text-muted">· ${task.category}</span>` : '';
+        const bodyClick = isGhost
+            ? ''
+            : `onclick="CramTasks.openModal('${task.id}')"`;
 
         div.innerHTML = `
-            <div class="task-card-swipe-bg left">✓</div>
-            <div class="task-card-swipe-bg right">✕</div>
-            <div class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="CramTasks.toggleComplete('${task.id}')" role="button" aria-label="Toggle complete"></div>
-            <div class="flex-1 min-w-0" onclick="CramTasks.openModal('${task.id}')">
-                <p class="task-title">${task.title}</p>
-                ${task.description ? `<p class="cc-text-xs cc-text-muted mt-0.5 truncate" style="max-width:250px;">${task.description}</p>` : ''}
+            <button type="button" class="task-checkbox-wrap" onclick="event.stopPropagation(); CramTasks.toggleComplete('${task.id}')" aria-label="${task.completed ? 'Restore task' : 'Mark complete'}" title="${task.completed ? 'Restore to active' : 'Mark done'}">
+                <span class="task-checkbox ${task.completed ? 'checked' : ''}" aria-hidden="true"></span>
+            </button>
+            <div class="task-card-body" ${bodyClick}>
+                <p class="task-title">${escapeHtml(task.title)}</p>
+                ${task.description && !isGhost ? `<p class="cc-text-xs cc-text-muted mt-0.5 truncate">${escapeHtml(task.description)}</p>` : ''}
                 <div class="task-meta mt-1">
                     <span class="task-priority ${p.cls}">${p.label}</span>
-                    ${dl ? `<span class="task-deadline ${isOverdue ? 'text-red-500 font-bold animate-pulse' : ''}">${dl.icon} ${dl.text}</span>` : ''}
-                    ${catBadge}
+                    ${dl && !isGhost ? `<span class="task-deadline ${isOverdue ? 'text-red-500 font-bold animate-pulse' : ''}">${dl.icon} ${dl.text}</span>` : ''}
+                    ${isGhost ? '<span class="task-deadline">✓ Done</span>' : ''}
+                    ${!isGhost ? catBadge : ''}
                 </div>
             </div>
-            ${!task.completed ? `<button class="bg-transparent border-0 cc-text-muted opacity-40 hover:opacity-100 cursor-pointer text-lg" 
-                onclick="event.stopPropagation(); CramTasks.confirmDelete('${task.id}')" title="Delete" aria-label="Delete task">×</button>` : ''}
+            ${!isGhost ? `<div class="task-card-actions">
+                <button type="button" class="task-delete-wrap" onclick="event.stopPropagation(); CramTasks.confirmDelete('${task.id}')" title="Delete" aria-label="Delete task">
+                    <span class="task-delete-icon" aria-hidden="true">×</span>
+                </button>
+            </div>` : ''}
         `;
 
         return div;
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     function formatSmartDeadline(deadline, now) {
@@ -638,84 +642,6 @@ const CramTasks = (() => {
     }
 
     // ═══════════════════════════════════════════════════
-    // SWIPE GESTURES
-    // ═══════════════════════════════════════════════════
-    function setupSwipeGestures() {
-        const container = document.getElementById('task-list');
-        if (!container) return;
-
-        let startX = 0, startY = 0, currentX = 0, activeCard = null, swiping = false;
-
-        container.addEventListener('touchstart', (e) => {
-            const card = e.target.closest('.task-card');
-            if (!card || e.target.closest('.task-checkbox') || e.target.closest('button')) return;
-            activeCard = card;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            currentX = startX;
-            swiping = false;
-        }, { passive: true });
-
-        container.addEventListener('touchmove', (e) => {
-            if (!activeCard) return;
-            const dx = e.touches[0].clientX - startX;
-            const dy = e.touches[0].clientY - startY;
-
-            // If vertical scroll is dominant, cancel swipe
-            if (!swiping && Math.abs(dy) > Math.abs(dx)) {
-                activeCard = null;
-                return;
-            }
-            swiping = true;
-            currentX = e.touches[0].clientX;
-            const maxSwipe = 120;
-            const clampedDx = Math.max(-maxSwipe, Math.min(maxSwipe, dx));
-
-            activeCard.style.transform = `translateX(${clampedDx}px)`;
-            activeCard.style.transition = 'none';
-
-            // Show swipe background opacity based on distance
-            const progress = Math.abs(clampedDx) / 80;
-            if (clampedDx > 0) {
-                activeCard.style.borderLeftColor = `rgba(52, 211, 153, ${Math.min(1, progress)})`;
-            } else {
-                activeCard.style.borderRightColor = `rgba(239, 68, 68, ${Math.min(1, progress)})`;
-            }
-        }, { passive: true });
-
-        container.addEventListener('touchend', () => {
-            if (!activeCard) return;
-            const dx = currentX - startX;
-            const id = activeCard.dataset.taskId;
-
-            if (dx > 80) {
-                // Swipe right: complete
-                activeCard.style.transform = 'translateX(100%)';
-                activeCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                activeCard.style.opacity = '0';
-                setTimeout(() => {
-                    toggleComplete(id);
-                }, 300);
-            } else if (dx < -80) {
-                // Swipe left: delete
-                activeCard.style.transform = 'translateX(-100%)';
-                activeCard.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                activeCard.style.opacity = '0';
-                setTimeout(() => {
-                    deleteTask(id);
-                }, 300);
-            } else {
-                activeCard.style.transform = 'translateX(0)';
-                activeCard.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                activeCard.style.borderLeftColor = '';
-                activeCard.style.borderRightColor = '';
-            }
-            activeCard = null;
-            swiping = false;
-        }, { passive: true });
-    }
-
-    // ═══════════════════════════════════════════════════
     // MODAL
     // ═══════════════════════════════════════════════════
     function openModal(taskId) {
@@ -732,6 +658,15 @@ const CramTasks = (() => {
         const charCount = document.getElementById('title-char-count');
 
         if (!modal) return;
+
+        // Ghost / finished tasks are read-only
+        if (taskId) {
+            const existing = (CramStore.get('tasks') || []).find(t => t.id === taskId);
+            if (existing?.completed) {
+                CramNotify?.info('Finished tasks are read-only. Uncheck to restore and edit.');
+                return;
+            }
+        }
 
         // Reset category
         document.getElementById('category-chips')?.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -861,6 +796,7 @@ const CramTasks = (() => {
 
         if (task.completed) {
             CramStore.updateTask(id, { completed: false, completedAt: null });
+            CramNotify?.success('Task restored to active list');
         } else {
             CramStore.completeTask(id);
             CramStore.addTreeXP(5);
@@ -869,6 +805,10 @@ const CramTasks = (() => {
             CramStore.set('stats.totalTasksCompleted', (stats.totalTasksCompleted || 0) + 1);
             CramNotify.motivate();
         }
+        // Keep finished section open so the ghost appears immediately
+        showCompleted = true;
+        const chevron = document.getElementById('completed-chevron');
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
         renderTasks(currentFilter);
         updateProgress();
         updateBackpack();

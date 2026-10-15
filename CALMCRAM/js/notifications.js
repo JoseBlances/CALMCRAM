@@ -52,10 +52,13 @@ const CramNotify = (() => {
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.innerHTML = `
-            <span class="toast-icon">${config.icon || icons[config.type] || '💬'}</span>
-            <span class="toast-message">${config.message}</span>
+            <span class="toast-icon"></span>
+            <span class="toast-message"></span>
             <button class="toast-close" aria-label="Dismiss">✕</button>
         `;
+        // As text: messages can contain what the student typed (task titles, names)
+        toast.querySelector('.toast-icon').textContent = config.icon || icons[config.type] || '💬';
+        toast.querySelector('.toast-message').textContent = String(config.message);
 
         // Dismiss on click
         toast.querySelector('.toast-close').addEventListener('click', () => dismiss(toast));

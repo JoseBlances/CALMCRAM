@@ -1,0 +1,9 @@
+<?php
+/**
+ * Local secrets — copy to config.local.php and fill in your key.
+ * config.local.php should NOT be committed.
+ *
+ * Free Google AI Studio key: https://aistudio.google.com/apikey
+ */
+define('GEMINI_API_KEY', 'your-gemini-api-key-here');
+define('GEMINI_MODEL', 'gemini-2.0-flash');

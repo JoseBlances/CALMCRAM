@@ -23,6 +23,20 @@ define('DB_CHARSET', 'utf8mb4');
 // API path used by the frontend sync layer
 define('API_PATH', BASE_PATH . '/api');
 
+// Load local overrides first (API keys, etc.)
+$localConfig = BASE_DIR . '/config.local.php';
+if (is_file($localConfig)) {
+    require_once $localConfig;
+}
+
+// Google Gemini Study Buddy defaults (override in config.local.php)
+if (!defined('GEMINI_API_KEY')) {
+    define('GEMINI_API_KEY', '');
+}
+if (!defined('GEMINI_MODEL')) {
+    define('GEMINI_MODEL', 'gemini-2.0-flash');
+}
+
 // Available pages
 define('PAGES', [
     'dashboard'    => 'Dashboard',
@@ -35,6 +49,7 @@ define('PAGES', [
     'profile'      => 'Profile',
     'settings'     => 'Settings',
     'onboarding'   => 'Welcome',
+    'login'        => 'Log in',
 ]);
 
 // Navigation tabs (bottom bar)
@@ -56,7 +71,10 @@ define('ACADEMIC_STATES', [
 
 // Helper function
 function asset_url($path) {
-    return BASE_PATH . '/' . ltrim($path, '/');
+    $path = ltrim($path, '/');
+    // The file's change time in the URL makes browsers fetch an edited CSS/JS file at once
+    $modified = @filemtime(BASE_DIR . '/' . $path);
+    return BASE_PATH . '/' . $path . ($modified ? '?v=' . $modified : '');
 }
 
 function page_url($page) {

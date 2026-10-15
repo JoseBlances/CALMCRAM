@@ -11,12 +11,14 @@ const CramStore = (() => {
     const defaults = {
         user: {
             nickname: '',
+            email: null,
             onboarded: false,
+            authenticated: false,
             createdAt: null,
         },
         settings: {
-            darkMode: false,
-            theme: 'auto',
+            darkMode: true,
+            theme: 'dark',
             reducedMotion: false,
             notifications: true,
             focusDuration: 25,
@@ -79,6 +81,31 @@ const CramStore = (() => {
         try {
             localStorage.setItem(TOKEN_KEY, token);
         } catch (e) { /* ignore */ }
+    }
+
+    function clearToken() {
+        try {
+            localStorage.removeItem(TOKEN_KEY);
+        } catch (e) { /* ignore */ }
+    }
+
+    function applyRemoteState(remote) {
+        state = deepMerge(JSON.parse(JSON.stringify(defaults)), remote || {});
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) { /* ignore */ }
+        serverReady = true;
+        emit('sync', { direction: 'pull' });
+        return state;
+    }
+
+    function clearLocalOnly() {
+        clearTimeout(syncTimer);
+        clearToken();
+        localStorage.removeItem(STORAGE_KEY);
+        state = JSON.parse(JSON.stringify(defaults));
+        serverReady = false;
+        emit('reset');
     }
 
     function authHeaders(extra = {}) {
@@ -330,11 +357,18 @@ const CramStore = (() => {
     }
 
     /**
-     * Pull state from MySQL. Prefer DB when user already has a guest token
-     * or when localStorage is empty; otherwise keep local and push up.
+     * Pull state from MySQL for the logged-in account.
+     * Returns { ok, needsAuth, state } so the app can redirect to login.
      */
     async function syncFromServer() {
         load();
+        const token = getToken();
+
+        if (!token) {
+            serverReady = false;
+            return { ok: false, needsAuth: true, state };
+        }
+
         const hadLocal = !!localStorage.getItem(STORAGE_KEY);
         const localOnboarded = !!(state && state.user && state.user.onboarded);
 
@@ -345,6 +379,12 @@ const CramStore = (() => {
             });
             const data = await res.json();
 
+            if (res.status === 401 || data.needsAuth) {
+                clearToken();
+                serverReady = false;
+                return { ok: false, needsAuth: true, state };
+            }
+
             if (!res.ok || !data.ok) {
                 throw new Error(data.error || ('HTTP ' + res.status));
             }
@@ -354,27 +394,22 @@ const CramStore = (() => {
             const remote = data.state || {};
             const remoteOnboarded = !!(remote.user && remote.user.onboarded);
 
-            // Prefer remote if it has progress, or local is empty
             if (remoteOnboarded || !hadLocal || !localOnboarded) {
-                state = deepMerge(JSON.parse(JSON.stringify(defaults)), remote);
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                } catch (e) { /* ignore */ }
-                emit('sync', { direction: 'pull' });
+                applyRemoteState(remote);
             } else if (localOnboarded && !remoteOnboarded) {
-                // Migrate existing localStorage data into MySQL once
                 serverReady = true;
                 await pushToServer();
             }
 
             serverReady = true;
             lastSyncError = null;
-            return { ok: true, state };
+            return { ok: true, needsAuth: false, state };
         } catch (err) {
             lastSyncError = err;
             serverReady = false;
             console.warn('CramStore: server unavailable, using localStorage only', err);
-            return { ok: false, error: err, state };
+            // Keep session if we still have a token — offline mode
+            return { ok: false, needsAuth: false, error: err, state };
         }
     }
 
@@ -382,6 +417,7 @@ const CramStore = (() => {
         const token = getToken();
         localStorage.removeItem(STORAGE_KEY);
         state = JSON.parse(JSON.stringify(defaults));
+        // Preserve auth identity in defaults merge after clear of study data
         emit('reset');
 
         if (token) {
@@ -401,12 +437,30 @@ const CramStore = (() => {
         return JSON.stringify(state, null, 2);
     }
 
+    /** Saves exportData() as a .json file on the device. */
+    function downloadExport() {
+        const blob = new Blob([exportData()], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `cramcalm-data-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        // Some browsers start the download after click() returns
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
     function isServerReady() {
         return serverReady;
     }
 
     function getLastSyncError() {
         return lastSyncError;
+    }
+
+    function isAuthenticated() {
+        return !!getToken() && !!(get('user.authenticated') || get('user.email'));
     }
 
     // Initialize local cache immediately
@@ -416,7 +470,8 @@ const CramStore = (() => {
         get, set, update, on, emit,
         addTask, updateTask, deleteTask, completeTask,
         addFocusSession, addTreeXP, damageTree, updateStreak,
-        clearAll, exportData, load,
+        clearAll, exportData, downloadExport, load,
         syncFromServer, pushToServer, isServerReady, getLastSyncError,
+        setToken, clearToken, applyRemoteState, clearLocalOnly, getToken, isAuthenticated,
     };
 })();

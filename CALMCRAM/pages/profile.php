@@ -5,9 +5,10 @@
             style="background: linear-gradient(135deg, var(--cc-primary), var(--cc-accent));">
         </div>
         <h1 class="text-xl font-heading font-black" id="profile-nickname">Scholar</h1>
+        <p class="cc-text-xs cc-text-muted mt-1" id="profile-email"></p>
         <button class="cc-text-xs cc-text-primary font-heading font-bold mt-1 bg-transparent border-0 cursor-pointer" onclick="CramProfile.editNickname()">✏️ Edit Name</button>
         <div class="mt-3">
-            <span class="cc-badge cc-badge-primary">🎓 Guest Mode</span>
+            <span class="cc-badge cc-badge-primary" id="profile-account-badge">🎓 Signed in</span>
         </div>
     </div>
 
@@ -75,6 +76,7 @@
     <!-- Data -->
     <div class="cc-section animate-on-enter">
         <button class="cc-btn cc-btn-secondary w-full mb-3" onclick="CramProfile.exportData()">📦 Export Data</button>
+        <button class="cc-btn cc-btn-secondary w-full mb-3" onclick="CramProfile.logout()">🚪 Log out</button>
     </div>
 </div>
 
@@ -98,11 +100,16 @@ const CramProfile = {
         if (page !== 'profile') return;
 
         const nickname = CramStore.get('user.nickname') || 'Scholar';
+        const email = CramStore.get('user.email') || '';
         const stats = CramStore.get('stats') || {};
         const streak = CramStore.get('streak') || {};
 
         document.getElementById('profile-nickname').textContent = nickname;
         document.getElementById('profile-avatar').textContent = nickname.charAt(0).toUpperCase();
+        const emailEl = document.getElementById('profile-email');
+        if (emailEl) emailEl.textContent = email;
+        const badge = document.getElementById('profile-account-badge');
+        if (badge) badge.textContent = email ? '🎓 Signed in' : '🎓 Account';
         document.getElementById('profile-streak-count').textContent = streak.current || 0;
         document.getElementById('profile-best-streak').textContent = streak.best || 0;
         document.getElementById('profile-total-focus').textContent = CramApp.formatDuration(stats.totalFocusMinutes || 0);
@@ -164,15 +171,13 @@ const CramProfile = {
     },
 
     exportData() {
-        const data = CramStore.exportData();
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'cramcalm-data.json';
-        a.click();
-        URL.revokeObjectURL(url);
+        CramStore.downloadExport();
         CramNotify.success('Data exported! 📦');
+    },
+
+    async logout() {
+        if (!confirm('Log out of CramCalm?')) return;
+        await CramAuth.logout();
     }
 };
 

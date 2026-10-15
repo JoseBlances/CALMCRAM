@@ -187,7 +187,7 @@
             </div>
             <hr class="cc-divider">
             <div class="py-2">
-                <button class="cc-btn cc-btn-ghost cc-w-full" onclick="CramCalendar?.exportICS?.() || CramNotify?.info('Navigate to Calendar to export')">📤 Export .ics File</button>
+                <a class="cc-btn cc-btn-ghost cc-w-full" href="?page=calendar">📤 Export .ics File (opens Calendar)</a>
             </div>
         </div>
     </div>
@@ -210,7 +210,7 @@
     <div class="cc-section animate-on-enter">
         <h3 class="cc-section-title">💾 Data Management</h3>
         <div class="flex flex-col gap-3">
-            <button class="cc-btn cc-btn-secondary w-full" onclick="CramProfile?.exportData()">📦 Export Data</button>
+            <button class="cc-btn cc-btn-secondary w-full" onclick="CramSettings.exportData()">📦 Export Data</button>
             <button class="cc-btn cc-btn-danger w-full" id="clear-data-btn" onclick="CramSettings.clearData()">🗑️ Clear All Data</button>
         </div>
     </div>
@@ -357,16 +357,27 @@ const CramSettings = {
 
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
+            document.documentElement.style.backgroundColor = '#1A2332';
+            document.documentElement.style.colorScheme = 'dark';
             CramStore.set('settings.darkMode', true);
             document.getElementById('setting-dark-mode')?.classList.add('active');
         } else if (theme === 'light') {
             document.documentElement.classList.remove('dark');
+            document.documentElement.style.backgroundColor = '#F0F7F4';
+            document.documentElement.style.colorScheme = 'light';
             CramStore.set('settings.darkMode', false);
             document.getElementById('setting-dark-mode')?.classList.remove('active');
         } else {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.documentElement.classList.toggle('dark', prefersDark);
+            document.documentElement.style.backgroundColor = prefersDark ? '#1A2332' : '#F0F7F4';
+            document.documentElement.style.colorScheme = prefersDark ? 'dark' : 'light';
             CramStore.set('settings.darkMode', prefersDark);
+        }
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) {
+            const isDark = document.documentElement.classList.contains('dark');
+            meta.setAttribute('content', isDark ? '#1A2332' : '#F0F7F4');
         }
     },
 
@@ -470,6 +481,11 @@ const CramSettings = {
 
     saveBreakDuration(val) {
         CramStore.set('settings.breakDuration', parseInt(val));
+    },
+
+    exportData() {
+        CramStore.downloadExport();
+        CramNotify.success('Data exported! 📦');
     },
 
     clearData() {

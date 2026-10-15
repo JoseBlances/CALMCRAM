@@ -33,13 +33,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ---------------------------------------------------------------------------
 CREATE TABLE `users` (
   `id`            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `guest_token`   CHAR(64)        NOT NULL,
+  `guest_token`   CHAR(64)        NOT NULL COMMENT 'Session token after login/register',
   `nickname`      VARCHAR(20)     NOT NULL DEFAULT '',
   `email`         VARCHAR(255)    NULL DEFAULT NULL,
   `password_hash` VARCHAR(255)    NULL DEFAULT NULL,
   `onboarded`     TINYINT(1)      NOT NULL DEFAULT 0,
   `created_at`    DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at`    DATETIME(3)     NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(3),
+  `last_login_at` DATETIME(3)     NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_guest_token` (`guest_token`),
   UNIQUE KEY `uq_users_email` (`email`),

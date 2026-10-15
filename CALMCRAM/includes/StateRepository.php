@@ -144,8 +144,10 @@ class StateRepository
         return [
             'user' => [
                 'nickname' => $user['nickname'] ?? '',
+                'email' => $user['email'] ?? null,
                 'onboarded' => (bool) ($user['onboarded'] ?? false),
                 'createdAt' => $this->toIso($user['created_at'] ?? null),
+                'authenticated' => !empty($user['password_hash']),
             ],
             'settings' => $settingsOut,
             'tasks' => array_map([$this, 'mapTask'], $tasks),

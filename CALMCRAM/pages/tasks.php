@@ -69,11 +69,6 @@
         </div>
     </div>
 
-    <!-- Swipe Hint (shown once) -->
-    <div class="cc-card mb-3 animate-on-enter text-center py-3 hidden" id="swipe-hint" style="background: var(--cc-surface); border: none;">
-        <p class="cc-text-xs cc-text-muted">👆 Swipe right to complete · Swipe left to delete</p>
-    </div>
-
     <!-- Task List -->
     <div class="flex flex-col gap-3" id="task-list">
         <div class="cc-empty" id="task-empty">
@@ -89,11 +84,12 @@
             <hr class="flex-1 border-0 h-px" style="background: var(--cc-border);">
             <button class="cc-text-xs cc-text-muted font-heading font-bold uppercase tracking-wide bg-transparent border-0 cursor-pointer flex items-center gap-1" 
                 onclick="CramTasks.toggleCompleted()" id="completed-toggle-btn">
-                ✅ Completed <span id="completed-count">0</span>
-                <span id="completed-chevron" style="transition: transform 0.3s;">▾</span>
+                👻 Finished <span id="completed-count">0</span>
+                <span id="completed-chevron" style="transition: transform 0.3s; transform: rotate(180deg);">▾</span>
             </button>
             <hr class="flex-1 border-0 h-px" style="background: var(--cc-border);">
         </div>
+        <p class="cc-text-xs cc-text-muted text-center mt-2">Ghost tasks — reminders of what you’ve finished. Tap the check to restore.</p>
     </div>
     <div class="flex flex-col gap-3 hidden" id="completed-task-list"></div>
 
@@ -185,17 +181,17 @@
                 </div>
 
                 <!-- Time of Day Presets -->
-                <div class="flex gap-1.5 mb-3" id="time-preset-chips">
-                    <button type="button" class="chip cc-text-xs flex-1 text-center" style="padding: 0.35rem 0.25rem;" onclick="CramTasks.setTimePreset('08:00', this)">
+                <div class="flex gap-1.5 mb-3 flex-wrap" id="time-preset-chips">
+                    <button type="button" class="chip cc-text-xs text-center" style="padding: 0.4rem 0.65rem; flex: 1 1 calc(50% - 0.4rem); min-width: 0;" onclick="CramTasks.setTimePreset('08:00', this)">
                         🌅 Morning
                     </button>
-                    <button type="button" class="chip cc-text-xs flex-1 text-center" style="padding: 0.35rem 0.25rem;" onclick="CramTasks.setTimePreset('13:00', this)">
+                    <button type="button" class="chip cc-text-xs text-center" style="padding: 0.4rem 0.65rem; flex: 1 1 calc(50% - 0.4rem); min-width: 0;" onclick="CramTasks.setTimePreset('13:00', this)">
                         ☀️ Afternoon
                     </button>
-                    <button type="button" class="chip cc-text-xs flex-1 text-center" style="padding: 0.35rem 0.25rem;" onclick="CramTasks.setTimePreset('18:00', this)">
+                    <button type="button" class="chip cc-text-xs text-center" style="padding: 0.4rem 0.65rem; flex: 1 1 calc(50% - 0.4rem); min-width: 0;" onclick="CramTasks.setTimePreset('18:00', this)">
                         🌆 Evening
                     </button>
-                    <button type="button" class="chip cc-text-xs flex-1 text-center active" style="padding: 0.35rem 0.25rem;" onclick="CramTasks.setTimePreset('23:59', this)">
+                    <button type="button" class="chip cc-text-xs text-center active" style="padding: 0.4rem 0.65rem; flex: 1 1 calc(50% - 0.4rem); min-width: 0;" onclick="CramTasks.setTimePreset('23:59', this)">
                         🌙 End of Day
                     </button>
                 </div>

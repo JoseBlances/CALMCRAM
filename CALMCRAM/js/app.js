@@ -12,10 +12,33 @@ const CramApp = (() => {
         console.log('🌿 CramCalm initializing...');
 
         // Sync with MySQL (falls back to localStorage if DB is offline)
+        let syncResult = { ok: false, needsAuth: true };
         if (typeof CramStore.syncFromServer === 'function') {
-            await CramStore.syncFromServer();
+            syncResult = await CramStore.syncFromServer();
         } else {
             CramStore.load();
+        }
+
+        const currentPage = new URLSearchParams(window.location.search).get('page') || 'dashboard';
+        const authPages = ['login'];
+
+        // Require login for the app
+        if (syncResult.needsAuth) {
+            if (!authPages.includes(currentPage)) {
+                window.location.href = '?page=login';
+                return;
+            }
+            // On login page: still init light UI (dark mode)
+            initDarkMode();
+            initAccessibility();
+            console.log('🌿 CramCalm auth screen ready');
+            return;
+        }
+
+        // Already logged in — leave the login page
+        if (currentPage === 'login') {
+            window.location.href = CramStore.get('user.onboarded') ? '?page=dashboard' : '?page=onboarding';
+            return;
         }
 
         // Setup dark mode
@@ -23,10 +46,9 @@ const CramApp = (() => {
 
         // Restore accessibility settings
         initAccessibility();
+
         // Check onboarding
         if (!CramStore.get('user.onboarded')) {
-            // Redirect to onboarding if not on it
-            const currentPage = new URLSearchParams(window.location.search).get('page');
             if (currentPage !== 'onboarding') {
                 window.location.href = '?page=onboarding';
                 return;
@@ -61,28 +83,52 @@ const CramApp = (() => {
     }
 
     function initDarkMode() {
-        const setting = CramStore.get('settings.darkMode');
         const root = document.documentElement;
+        const settings = CramStore.get('settings') || {};
+        const theme = settings.theme || 'auto';
+        let dark;
 
-        if (setting === false || setting === 'false') {
-            root.classList.remove('dark');
+        if (theme === 'light') dark = false;
+        else if (theme === 'dark') dark = true;
+        else if (theme === 'auto') {
+            dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         } else {
-            // Default to dark mode
-            root.classList.add('dark');
+            dark = !(settings.darkMode === false || settings.darkMode === 'false');
         }
 
-        // Listen for system changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (CramStore.get('settings.theme') === 'auto') {
-                root.classList.toggle('dark', e.matches);
-            }
-        });
+        root.classList.toggle('dark', dark);
+        root.style.backgroundColor = dark ? '#1A2332' : '#F0F7F4';
+        root.style.colorScheme = dark ? 'dark' : 'light';
+        if (CramStore.get('settings.darkMode') !== dark) {
+            CramStore.set('settings.darkMode', dark);
+        }
+
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', dark ? '#1A2332' : '#F0F7F4');
+
+        // Listen for system changes (auto theme only)
+        if (!initDarkMode._bound) {
+            initDarkMode._bound = true;
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (CramStore.get('settings.theme') === 'auto') {
+                    root.classList.toggle('dark', e.matches);
+                    root.style.backgroundColor = e.matches ? '#1A2332' : '#F0F7F4';
+                    root.style.colorScheme = e.matches ? 'dark' : 'light';
+                    CramStore.set('settings.darkMode', e.matches);
+                }
+            });
+        }
     }
 
     function toggleDarkMode() {
         const root = document.documentElement;
         const isDark = root.classList.toggle('dark');
+        root.style.backgroundColor = isDark ? '#1A2332' : '#F0F7F4';
+        root.style.colorScheme = isDark ? 'dark' : 'light';
         CramStore.set('settings.darkMode', isDark);
+        CramStore.set('settings.theme', isDark ? 'dark' : 'light');
+        const meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', isDark ? '#1A2332' : '#F0F7F4');
         return isDark;
     }
 

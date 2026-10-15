@@ -1,11 +1,16 @@
 <div class="cc-page pb-nav" id="page-assistant">
     <div class="cc-page-header animate-on-enter">
-        <div class="flex items-center gap-3">
-            <span class="text-3xl animate-bob">🤖</span>
-            <div>
-                <h1 class="text-xl font-heading font-black">Study Buddy</h1>
-                <p class="cc-text-xs cc-text-muted">Your AI-powered study assistant</p>
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="text-3xl animate-bob">🤖</span>
+                <div class="min-w-0">
+                    <h1 class="text-xl font-heading font-black">Study Buddy</h1>
+                    <p class="cc-text-xs cc-text-muted">Google Gemini tutoring · study plans · calm coaching</p>
+                </div>
             </div>
+            <button type="button" class="cc-btn cc-btn-secondary cc-btn-sm flex-shrink-0" onclick="CramAssistant.clearChat()" title="Clear conversation">
+                🗑️ Clear
+            </button>
         </div>
     </div>
 

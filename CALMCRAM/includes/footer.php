@@ -7,6 +7,7 @@
 
     <!-- Core JS (load order matters) -->
     <script src="<?= asset_url('js/storage.js') ?>"></script>
+    <script src="<?= asset_url('js/auth.js') ?>"></script>
     <script src="<?= asset_url('js/animations.js') ?>"></script>
     <script src="<?= asset_url('js/notifications.js') ?>"></script>
     <script src="<?= asset_url('js/state-engine.js') ?>"></script>
